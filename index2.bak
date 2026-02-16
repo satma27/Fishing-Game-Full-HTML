@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Main Mancing Seru</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #dff6f9;
+    padding: 20px;
+  }
+
+  h1 { text-align: center; }
+
+  .box {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+
+  button {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #4fc3f7;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 10px 0;
+    width: 100%;
+  }
+
+  button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  .small {
+    font-size: 14px;
+    color: #555;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>🎣 Main Mancing Seru 🎣</h1>
+
+<div class="box">
+  <p>Uang: Rp <b id="uang">0</b></p>
+  <p>Pancingan aktif: <b id="rodAktif">Pancingan Kayu</b></p>
+  <button id="btnMancing">🎣 Lempar umpan...</button>
+  <p id="status" class="small"></p>
+</div>
+
+<div class="box">
+  <h3>Info Ikan</h3>
+  <div id="infoIkan"></div>
+</div>
+
+<div class="box">
+  <h3>Toko Pancingan</h3>
+  <div id="toko"></div>
+</div>
+
+<p class="small" style="text-align:center">
+  Main Mancing, dibuat oleh Tama 2026
+</p>
+
+<script>
+/* ================= STATE ================= */
+
+let uang = 0;
+let isMancing = false;
+
+/* ================= PANCINGAN ================= */
+
+const rods = {
+  kayu: { nama: "Pancingan Kayu", luck: 0, owned: true },
+  plastik: { nama: "Pancingan Plastik", harga: 150000, luck: 1, owned: false },
+  besi: { nama: "Pancingan Besi", harga: 200000, luck: 2, owned: false },
+  karbon: { nama: "Pancingan Karbon", harga: 500000, luck: 3, owned: false },
+  graphite: { nama: "Pancingan Graphite", harga: 700000, luck: 4, owned: false }
+};
+
+let rodAktif = "kayu";
+
+/* ================= IKAN (PAKE RANGE HARGA) ================= */
+
+const fishes = [
+  { nama: "Salmon", emoji: "🐟", tipe: "Common", minPrice: 3000, maxPrice: 5000, minLuck: 0, load: 2000, chance: 50 },
+  { nama: "Ikan Hias", emoji: "🐠", tipe: "Uncommon", minPrice: 6000, maxPrice: 10000, minLuck: 0, load: 2800, chance: 35 },
+  { nama: "Lumba-lumba", emoji: "🐬", tipe: "Epic", minPrice: 12000, maxPrice: 20000, minLuck: 1, load: 3100, chance: 20 },
+  { nama: "Hiu", emoji: "🦈", tipe: "Legendary", minPrice: 20500, maxPrice: 25000, minLuck: 2, load: 3600, chance: 10 },
+  { nama: "Paus Raksasa", emoji: "🐋", tipe: "Legendary+", minPrice: 27000, maxPrice: 37000, minLuck: 2, load: 3800, chance: 6 },
+  { nama: "Kraken", emoji: "🐙", tipe: "Mythic", minPrice: 40000, maxPrice: 50000, minLuck: 3, load: 4200, chance: 3 },
+  { nama: "Sotong Langka", emoji: "🦑", tipe: "Mythical Glory", minPrice: 55000, maxPrice: 70000, minLuck: 3, load: 4800, chance: 1 },
+  { nama: "Kepiting Sunda", emoji: "🦀", tipe: "Mythical Super Glory", minPrice: 500000, maxPrice: 500000, minLuck: 4, load: 5500, chance: 0.5 }
+];
+
+/* ================= UTIL ================= */
+
+function randomHarga(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/* ================= RENDER ================= */
+
+function renderUang() {
+  document.getElementById("uang").textContent =
+    uang.toLocaleString("id-ID");
+}
+
+function renderRod() {
+  document.getElementById("rodAktif").textContent =
+    rods[rodAktif].nama;
+}
+
+function renderInfoIkan() {
+  const div = document.getElementById("infoIkan");
+  div.innerHTML = "";
+  fishes.forEach(f => {
+    let hargaText =
+      f.minPrice === f.maxPrice
+        ? `Rp ${f.minPrice.toLocaleString("id-ID")}`
+        : `Rp ${f.minPrice.toLocaleString("id-ID")} - ${f.maxPrice.toLocaleString("id-ID")}`;
+
+    div.innerHTML += `
+      <p>${f.emoji} <b>${f.nama}</b><br>
+      <span class="small">
+        ${f.tipe} | ${hargaText}
+      </span></p>
+    `;
+  });
+}
+
+function renderToko() {
+  const div = document.getElementById("toko");
+  div.innerHTML = "";
+  Object.keys(rods).forEach(key => {
+    const r = rods[key];
+    if (r.owned) return;
+    div.innerHTML += `
+      <button onclick="beliRod('${key}')">
+        Beli ${r.nama} - Rp ${r.harga.toLocaleString("id-ID")}
+      </button>
+    `;
+  });
+}
+
+/* ================= LOGIC ================= */
+
+function beliRod(key) {
+  const r = rods[key];
+  if (uang < r.harga) {
+    alert("Eh bahlul, duit lu masih kurang. Usaha dulu sono😹");
+    return;
+  }
+  uang -= r.harga;
+  r.owned = true;
+  rodAktif = key;
+  renderUang();
+  renderRod();
+  renderToko();
+}
+
+document.getElementById("btnMancing").onclick = function () {
+  if (isMancing) return;
+
+  isMancing = true;
+  this.disabled = true;
+  document.getElementById("status").textContent =
+    "🎣 Pancingan lagi ditarik, sabar sebat dulu 🚬....";
+
+  const luck = rods[rodAktif].luck;
+  const pool = fishes.filter(f => f.minLuck <= luck);
+
+let weightedPool = [];
+pool.forEach(f => {
+  for (let i = 0; i < f.chance * 10; i++) {
+    weightedPool.push(f);
+  }
+});
+
+const fish = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+  const hargaDapat = randomHarga(fish.minPrice, fish.maxPrice);
+
+  setTimeout(() => {
+    uang += hargaDapat;
+    document.getElementById("status").textContent =
+      `DAPET ${fish.emoji} ${fish.nama} (${fish.tipe}) +Rp ${hargaDapat.toLocaleString("id-ID")}`;
+    renderUang();
+    isMancing = false;
+    document.getElementById("btnMancing").disabled = false;
+  }, fish.load);
+};
+
+/* ================= INIT ================= */
+
+renderUang();
+renderRod();
+renderInfoIkan();
+renderToko();
+</script>
+
+</body>
+</html>
